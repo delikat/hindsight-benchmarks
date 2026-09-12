@@ -8,6 +8,7 @@ Supports two backends:
 
 import asyncio
 import json
+import re
 import signal
 import statistics
 import subprocess
@@ -263,6 +264,7 @@ class BenchmarkRun:
     dataset: str = "simple"
     concurrency: int = 1  # number of parallel requests sent simultaneously
     wall_s: float = 0.0   # actual total elapsed time from first request to last completion
+    reasoning_effort: str = ""  # effort actually sent to the model ("" = provider default)
     tests: list = field(default_factory=list)
 
     def success_rate(self) -> float:
@@ -532,16 +534,40 @@ def run_url(url: str, model_id: str, model_name: str, provider_id: str = "remote
     return run
 
 
-def run_gemini(model_name_api: str, model_id: str, model_name: str, provider_id: str = "gemini", concurrency: int = 1, dataset: str = "", api_key: str = "") -> BenchmarkRun:
+# reasoning_effort → Gemini 3 thinking_level. Same vocabulary hindsight-api's
+# gemini provider accepts; Gemini 1.x/2.x take an integer thinking_budget instead
+# and reject thinking_level, so those are left at their default.
+_GEMINI_THINKING_LEVELS = {"none": "MINIMAL", "minimal": "MINIMAL", "low": "LOW", "medium": "MEDIUM", "high": "HIGH", "xhigh": "HIGH"}
+_LEGACY_GEMINI_RE = re.compile(r"(?:^|/)gemini-[12]\.")
+
+
+def gemini_thinking_level(model: str, reasoning_effort: str) -> Optional[str]:
+    if not reasoning_effort or _LEGACY_GEMINI_RE.search(model):
+        return None
+    try:
+        return _GEMINI_THINKING_LEVELS[reasoning_effort.lower()]
+    except KeyError:
+        raise ValueError(f"reasoning_effort={reasoning_effort!r} is not a Gemini thinking level; use one of {', '.join(_GEMINI_THINKING_LEVELS)}") from None
+
+
+def run_gemini(model_name_api: str, model_id: str, model_name: str, provider_id: str = "gemini", concurrency: int = 1, dataset: str = "", api_key: str = "", reasoning_effort: str = "") -> BenchmarkRun:
     """Run benchmark using Google Gemini API."""
     try:
         from google import genai
     except ImportError:
         raise RuntimeError("google-genai is required. Install with: pip install google-genai")
 
+    thinking_level = gemini_thinking_level(model_name_api, reasoning_effort)
+    generation_config = {
+        "temperature": 0.1,
+        "max_output_tokens": 32768,
+    }
+    if thinking_level:
+        generation_config["thinking_config"] = {"thinking_level": thinking_level}
+
     texts = load_dataset(dataset)
     print(f"\n{'='*60}")
-    print(f"  {model_name} (Gemini API)  [concurrency={concurrency}]  [dataset={dataset}, {len(texts)} texts]")
+    print(f"  {model_name} (Gemini API)  [concurrency={concurrency}]  [dataset={dataset}, {len(texts)} texts]  [thinking_level={thinking_level or 'default'}]")
     print(f"{'='*60}\n")
 
     run = BenchmarkRun(
@@ -552,6 +578,7 @@ def run_gemini(model_name_api: str, model_id: str, model_name: str, provider_id:
         size_gb=0.0,
         dataset=dataset,
         concurrency=concurrency,
+        reasoning_effort=reasoning_effort if thinking_level else "",
     )
 
     client = genai.Client(api_key=api_key)
@@ -571,10 +598,7 @@ def run_gemini(model_name_api: str, model_id: str, model_name: str, provider_id:
                     client.models.generate_content,
                     model=model_name_api,
                     contents=full_prompt,
-                    config={
-                        "temperature": 0.1,
-                        "max_output_tokens": 32768,
-                    }
+                    config=generation_config,
                 )
 
                 content = response.text.strip()
