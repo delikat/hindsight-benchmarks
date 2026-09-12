@@ -1,0 +1,311 @@
+{
+  "model_id": "gpt-5.6-luna-medium",
+  "provider_id": "openrouter",
+  "retain": {
+    "timestamp": "2026-09-11T10:46:02.419590+00:00",
+    "model_id": "gpt-5.6-luna-medium",
+    "model_name": "GPT-5.6 Luna (medium reasoning)",
+    "provider_id": "openrouter",
+    "size_gb": 0.0,
+    "dataset": "locomo_3k",
+    "concurrency": 4,
+    "wall_s": 91.99623203277588,
+    "summary": {
+      "success": 20,
+      "total": 20,
+      "wall_s": 91.996,
+      "avg_latency_s": 16.546,
+      "throughput_rps": 0.217,
+      "completion_toks_s": 298.5,
+      "total_toks_s": 1169.0,
+      "out_in_ratio": 0.343,
+      "tokens_per_fact": 128.3
+    },
+    "tests": [
+      {
+        "test_index": 1,
+        "latency_s": 13.856956958770752,
+        "num_facts": 8,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 3913,
+        "completion_tokens": 1144,
+        "error": ""
+      },
+      {
+        "test_index": 2,
+        "latency_s": 14.599233865737915,
+        "num_facts": 9,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 3972,
+        "completion_tokens": 1167,
+        "error": ""
+      },
+      {
+        "test_index": 3,
+        "latency_s": 13.42218017578125,
+        "num_facts": 11,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4080,
+        "completion_tokens": 1219,
+        "error": ""
+      },
+      {
+        "test_index": 4,
+        "latency_s": 16.599427938461304,
+        "num_facts": 9,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 3991,
+        "completion_tokens": 1397,
+        "error": ""
+      },
+      {
+        "test_index": 5,
+        "latency_s": 19.726008653640747,
+        "num_facts": 11,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 3805,
+        "completion_tokens": 1520,
+        "error": ""
+      },
+      {
+        "test_index": 6,
+        "latency_s": 18.495516777038574,
+        "num_facts": 11,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 3888,
+        "completion_tokens": 1634,
+        "error": ""
+      },
+      {
+        "test_index": 7,
+        "latency_s": 14.241130828857422,
+        "num_facts": 9,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4114,
+        "completion_tokens": 1217,
+        "error": ""
+      },
+      {
+        "test_index": 8,
+        "latency_s": 26.165443897247314,
+        "num_facts": 15,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4123,
+        "completion_tokens": 2129,
+        "error": ""
+      },
+      {
+        "test_index": 9,
+        "latency_s": 17.418671131134033,
+        "num_facts": 11,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 3923,
+        "completion_tokens": 1383,
+        "error": ""
+      },
+      {
+        "test_index": 10,
+        "latency_s": 18.752313137054443,
+        "num_facts": 14,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 3829,
+        "completion_tokens": 1641,
+        "error": ""
+      },
+      {
+        "test_index": 11,
+        "latency_s": 14.964239835739136,
+        "num_facts": 9,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4063,
+        "completion_tokens": 1183,
+        "error": ""
+      },
+      {
+        "test_index": 12,
+        "latency_s": 14.605254173278809,
+        "num_facts": 8,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4038,
+        "completion_tokens": 1224,
+        "error": ""
+      },
+      {
+        "test_index": 13,
+        "latency_s": 18.247681617736816,
+        "num_facts": 15,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 3951,
+        "completion_tokens": 1544,
+        "error": ""
+      },
+      {
+        "test_index": 14,
+        "latency_s": 19.177746295928955,
+        "num_facts": 14,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 3948,
+        "completion_tokens": 1546,
+        "error": ""
+      },
+      {
+        "test_index": 15,
+        "latency_s": 14.389721155166626,
+        "num_facts": 12,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4086,
+        "completion_tokens": 1129,
+        "error": ""
+      },
+      {
+        "test_index": 16,
+        "latency_s": 17.87633776664734,
+        "num_facts": 9,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4125,
+        "completion_tokens": 1479,
+        "error": ""
+      },
+      {
+        "test_index": 17,
+        "latency_s": 16.325191974639893,
+        "num_facts": 9,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4109,
+        "completion_tokens": 1363,
+        "error": ""
+      },
+      {
+        "test_index": 18,
+        "latency_s": 15.022363901138306,
+        "num_facts": 9,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4063,
+        "completion_tokens": 1256,
+        "error": ""
+      },
+      {
+        "test_index": 19,
+        "latency_s": 10.488369941711426,
+        "num_facts": 9,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4062,
+        "completion_tokens": 847,
+        "error": ""
+      },
+      {
+        "test_index": 20,
+        "latency_s": 16.55292797088623,
+        "num_facts": 12,
+        "valid_json": true,
+        "success": true,
+        "retries": 0,
+        "prompt_tokens": 4000,
+        "completion_tokens": 1437,
+        "error": ""
+      }
+    ]
+  },
+  "quality": {
+    "accuracy": 50.0,
+    "correct": 40,
+    "total": 80,
+    "dataset": "beam_128k_subset",
+    "judge_model": "gemini-3.7-flash",
+    "context_mode": "facts_only",
+    "hindsight_version": "0.9.2",
+    "stored_fact_tokens": 154015,
+    "token_counter": "cl100k_base",
+    "per_ability": {
+      "abstention": {
+        "correct": 4,
+        "total": 8
+      },
+      "contradiction_resolution": {
+        "correct": 1,
+        "total": 8
+      },
+      "event_ordering": {
+        "correct": 0,
+        "total": 8
+      },
+      "information_extraction": {
+        "correct": 7,
+        "total": 8
+      },
+      "instruction_following": {
+        "correct": 7,
+        "total": 8
+      },
+      "knowledge_update": {
+        "correct": 5,
+        "total": 8
+      },
+      "multi_session_reasoning": {
+        "correct": 3,
+        "total": 8
+      },
+      "preference_following": {
+        "correct": 6,
+        "total": 8
+      },
+      "summarization": {
+        "correct": 0,
+        "total": 8
+      },
+      "temporal_reasoning": {
+        "correct": 7,
+        "total": 8
+      }
+    },
+    "generation_errors": 0,
+    "judge_errors": 0,
+    "partial": false,
+    "model_id": "gpt-5.6-luna-medium",
+    "provider_id": "openrouter",
+    "sample_ids": [
+      "beam-100k-1",
+      "beam-100k-13",
+      "beam-100k-16",
+      "beam-100k-18"
+    ]
+  }
+}

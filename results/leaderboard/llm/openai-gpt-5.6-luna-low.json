@@ -644,5 +644,16 @@
       "reasoning_effort": "low"
     },
     "retain_concurrency": 32
+  },
+  "reflect": {
+    "accuracy": 97.9,
+    "correct": 237,
+    "total": 242,
+    "avg_latency_s": 17.74,
+    "model_id": "gpt-5.6-luna-low",
+    "provider_id": "openai",
+    "sample_id": "conv-43",
+    "serving_route": "openrouter",
+    "note": "Run 2026-09-11 via OpenRouter serving; shared bank rb_shared_conv43_1789148405 (retain baseline google/gemini-2.5-flash via OpenRouter, judge gemini-2.5-flash-lite via OpenRouter)"
   }
 }

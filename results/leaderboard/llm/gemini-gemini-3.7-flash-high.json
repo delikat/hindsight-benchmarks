@@ -637,5 +637,16 @@
       "beam-100k-16",
       "beam-100k-18"
     ]
+  },
+  "reflect": {
+    "accuracy": 97.5,
+    "correct": 236,
+    "total": 242,
+    "avg_latency_s": 13.618,
+    "model_id": "gemini-3.7-flash-high",
+    "provider_id": "gemini",
+    "sample_id": "conv-43",
+    "serving_route": "openrouter",
+    "note": "Run 2026-09-11 via OpenRouter serving; shared bank rb_shared_conv43_1789148405 (retain baseline google/gemini-2.5-flash via OpenRouter, judge gemini-2.5-flash-lite via OpenRouter)"
   }
 }
