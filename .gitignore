@@ -13,3 +13,4 @@ benchmark-runner/datasets/embedding_banks.json
 .DS_Store
 .claude/
 docs/superpowers/
+.env
