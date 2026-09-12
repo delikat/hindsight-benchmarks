@@ -91,6 +91,8 @@ def main():
                    help="Model name to send in API request (for --url, e.g. 'ministral-3:14b-cloud' for Ollama)")
     p.add_argument("--provider-id", metavar="PROVIDER", default="",
                    help="Provider identifier (e.g., 'openai', 'groq', 'ollama-cloud', 'local'). Auto-detected if not specified.")
+    p.add_argument("--reasoning-effort", metavar="EFFORT", default="",
+                   help="Reasoning effort to send (none/low/medium/high). Gemini 3+: sent as thinking_level.")
     p.add_argument("--only", metavar="MODEL_ID", default="",
                    help="With --run-all, run only models whose model_id contains this substring.")
     available_datasets = sorted(p.stem for p in DATASETS_DIR.glob("*.json"))
@@ -134,7 +136,8 @@ def main():
                     gemini_model = model_config["gemini_model"]
                     run = run_gemini(gemini_model, model_id=model_id, model_name=model_name,
                                    provider_id=provider_id, concurrency=args.concurrency,
-                                   dataset=args.dataset, api_key=api_key)
+                                   dataset=args.dataset, api_key=api_key,
+                                   reasoning_effort=model_config.get("reasoning_effort", ""))
                     save_run(provider_id, model_id, run)
                     _print_summary(run)
 
@@ -182,7 +185,7 @@ def main():
         name = args.name or args.gemini_model
         model_id = args.model_id or args.gemini_model.lower().replace(" ", "-").replace("/", "-")
         provider_id = args.provider_id or "gemini"
-        run = run_gemini(args.gemini_model, model_id=model_id, model_name=name, provider_id=provider_id, concurrency=args.concurrency, dataset=args.dataset, api_key=api_key)
+        run = run_gemini(args.gemini_model, model_id=model_id, model_name=name, provider_id=provider_id, concurrency=args.concurrency, dataset=args.dataset, api_key=api_key, reasoning_effort=args.reasoning_effort)
         save_run(provider_id, model_id, run)
         _print_summary(run)
         return
