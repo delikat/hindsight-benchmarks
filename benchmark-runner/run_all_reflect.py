@@ -43,10 +43,20 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY", "")
 
-# Constant retain model — always gemini-2.5-flash
-RETAIN_PROVIDER = "gemini"
-RETAIN_MODEL = "gemini-2.5-flash"
-RETAIN_API_KEY = GEMINI_API_KEY
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+
+# Constant retain model — always gemini-2.5-flash. Routed through OpenRouter
+# when a key is set (paid-tier rate limits, same model), else Gemini direct.
+if OPENROUTER_API_KEY:
+    RETAIN_PROVIDER = "openai"
+    RETAIN_MODEL = "google/gemini-2.5-flash"
+    RETAIN_API_KEY = OPENROUTER_API_KEY
+    RETAIN_BASE_URL = "https://openrouter.ai/api/v1"
+else:
+    RETAIN_PROVIDER = "gemini"
+    RETAIN_MODEL = "gemini-2.5-flash"
+    RETAIN_API_KEY = GEMINI_API_KEY
+    RETAIN_BASE_URL = None
 
 # Model list is sourced from benchmark_models.json (single source of truth).
 # Add a model with `rag-benchmark add ...` — no edits needed here.
@@ -61,6 +71,9 @@ MODELS = [
 
 # Models that need a custom reflect LLM base URL (e.g. Ollama Cloud)
 REFLECT_BASE_URLS = {m["model_id"]: m["base_url"] for m in _REFLECT_MODELS if m["base_url"]}
+
+# Extra request-body params (e.g. OpenRouter provider pinning)
+REFLECT_EXTRA_BODY = {m["model_id"]: m["extra_body"] for m in _REFLECT_MODELS if m.get("extra_body")}
 
 BASE_ENV = {
     "HINDSIGHT_ENABLE_CP": "false",
@@ -85,6 +98,9 @@ BASE_ENV = {
     "HINDSIGHT_API_LLM_MODEL": RETAIN_MODEL,
     "HINDSIGHT_API_LLM_API_KEY": RETAIN_API_KEY,
 }
+if RETAIN_BASE_URL:
+    BASE_ENV["HINDSIGHT_API_RETAIN_LLM_BASE_URL"] = RETAIN_BASE_URL
+    BASE_ENV["HINDSIGHT_API_LLM_BASE_URL"] = RETAIN_BASE_URL
 
 
 def _make_env(reflect_provider: str, reflect_model: str, reflect_api_key: str, model_id: str = "") -> dict:
@@ -97,6 +113,14 @@ def _make_env(reflect_provider: str, reflect_model: str, reflect_api_key: str, m
     }
     if model_id in REFLECT_BASE_URLS:
         env["HINDSIGHT_API_REFLECT_LLM_BASE_URL"] = REFLECT_BASE_URLS[model_id]
+    elif reflect_provider == "anthropic":
+        # The generic HINDSIGHT_API_LLM_BASE_URL points at OpenRouter for the
+        # retain baseline, and the reflect config inherits it when no reflect
+        # base URL is set — which sends the Anthropic SDK to openrouter.ai.
+        # Pin the real endpoint so the fallback never applies.
+        env["HINDSIGHT_API_REFLECT_LLM_BASE_URL"] = "https://api.anthropic.com"
+    if model_id in REFLECT_EXTRA_BODY:
+        env["HINDSIGHT_API_REFLECT_LLM_EXTRA_BODY"] = json.dumps(REFLECT_EXTRA_BODY[model_id])
     return env
 
 
@@ -198,6 +222,7 @@ def main():
         print(f"Filtered to models matching '{filter_model}': {[m[1] for m in models_to_run]}")
 
     benchmark = ReflectBenchmark(
+        openrouter_api_key=OPENROUTER_API_KEY,
         gemini_api_key=GEMINI_API_KEY,
         openai_api_key=OPENAI_API_KEY,
     )

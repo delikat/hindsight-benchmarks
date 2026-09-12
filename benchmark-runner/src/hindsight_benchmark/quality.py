@@ -12,6 +12,7 @@ than production; the leaderboard labels it extraction quality.
 
 import json
 import os
+import re
 import sys
 import time
 from datetime import datetime
@@ -24,6 +25,8 @@ from .benchmark import DATASETS_DIR, LEADERBOARD_DIR
 
 ANSWER_GENERATOR_MODEL = "gemini-3.7-flash"
 JUDGE_MODEL = "gemini-3.7-flash"
+# Same model via OpenRouter (paid-tier rate limits without a Google billing account).
+OPENROUTER_JUDGE_MODEL = "google/gemini-3.7-flash"
 # Same model via Vertex AI (Google-hosted, billed to GCP credits).
 VERTEX_JUDGE_MODEL = "google/gemini-3.7-flash"
 VERTEX_JUDGE_PROXY_PORT = 8812
@@ -277,6 +280,7 @@ class QualityBenchmark:
         self,
         vertex_project: Optional[str] = None,
         gemini_api_key: Optional[str] = None,
+        openrouter_api_key: Optional[str] = None,
         vertex_judge_port: int = VERTEX_JUDGE_PROXY_PORT,
     ):
         if vertex_project:
@@ -288,6 +292,13 @@ class QualityBenchmark:
                 timeout=120.0,
             )
             self.model_name = VERTEX_JUDGE_MODEL
+        elif openrouter_api_key:
+            self.llm_client = OpenAI(
+                api_key=openrouter_api_key,
+                base_url="https://openrouter.ai/api/v1",
+                timeout=120.0,
+            )
+            self.model_name = OPENROUTER_JUDGE_MODEL
         elif gemini_api_key:
             self.llm_client = OpenAI(
                 api_key=gemini_api_key,
@@ -485,6 +496,29 @@ class QualityBenchmark:
             print("Not saving results (--no-save)")
         return result
 
+    def _completion(self, **kwargs):
+        """chat.completions.create with quota-aware backoff.
+
+        A free-tier Gemini key allows only a handful of requests per minute;
+        the 429 carries the server's suggested retry delay. Honoring it keeps
+        a rate-limited run pacing itself to the quota instead of burning the
+        callers' short transient-error retries inside one quota window.
+        """
+        from openai import RateLimitError
+
+        for attempt in range(8):
+            try:
+                return self.llm_client.chat.completions.create(
+                    model=self.model_name, **kwargs
+                )
+            except RateLimitError as e:
+                if attempt == 7:
+                    raise
+                m = re.search(r"retry in (\d+(?:\.\d+)?)s", str(e), re.IGNORECASE)
+                delay = (float(m.group(1)) if m else 15.0) + 1.0
+                print(f"    Rate limited; waiting {delay:.0f}s...", flush=True)
+                time.sleep(delay)
+
     def _generate_answer(self, question: str, recall_response, question_date: Optional[datetime] = None) -> str:
         context = _format_context(recall_response)
         qdate = question_date.strftime("%Y-%m-%d %H:%M:%S UTC") if question_date else "Not specified"
@@ -516,8 +550,7 @@ Answer:
 """
         for attempt in range(2):
             try:
-                response = self.llm_client.chat.completions.create(
-                    model=self.model_name,
+                response = self._completion(
                     messages=[{"role": "user", "content": prompt}],
                     temperature=0.1,
                 )
@@ -546,8 +579,7 @@ Respond with JSON: {{"reasoning": "...", "correct": true or false}}"""
 
         for attempt in range(2):
             try:
-                response = self.llm_client.chat.completions.create(
-                    model=self.model_name,
+                response = self._completion(
                     messages=[{"role": "user", "content": prompt}],
                     response_format={"type": "json_object"},
                     temperature=0,

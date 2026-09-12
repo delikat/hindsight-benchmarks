@@ -32,6 +32,12 @@ PROVIDER_DEFAULTS = {
         "pricing_type": "pay-per-use", "method": "groq", "model_field": "groq_model",
         "url": None, "api_key_env": "GROQ_API_KEY",
     },
+    "anthropic": {
+        # Anthropic's OpenAI-compatible endpoint (https://api.anthropic.com/v1/chat/completions).
+        "provider_name": "Anthropic", "provider_icon": "/anthropic.png",
+        "pricing_type": "pay-per-use", "method": "url", "model_field": "api_model",
+        "url": "https://api.anthropic.com", "api_key_env": "ANTHROPIC_API_KEY",
+    },
     "ollama-cloud": {
         "provider_name": "Ollama Cloud", "provider_icon": "/ollama.png",
         "pricing_type": "pay-per-use", "method": "url", "model_field": "api_model",
@@ -59,6 +65,27 @@ PROVIDER_DEFAULTS = {
 }
 
 
+def derive_extra_body(m: dict) -> dict | None:
+    """Extra request-body params for a raw JSON model entry, or None.
+
+    ``openrouter_providers`` pins the OpenRouter upstream host(s): the same
+    model slug can be served by many providers whose quality differs wildly
+    (20-point benchmark spreads have been measured), so unpinned routing makes
+    results non-reproducible. allow_fallbacks is off on purpose — for a
+    benchmark, a silent fallback to a different host contaminates the run;
+    failing loudly is correct. A raw ``extra_body`` dict is passed through
+    verbatim and merged (its own "provider" key loses to the pin).
+    """
+    extra_body = dict(m["extra_body"]) if m.get("extra_body") else None
+    if m.get("openrouter_providers"):
+        extra_body = extra_body or {}
+        extra_body["provider"] = {
+            "order": list(m["openrouter_providers"]),
+            "allow_fallbacks": False,
+        }
+    return extra_body
+
+
 def _normalize(m: dict) -> dict:
     """Map a raw JSON entry to the fields the runners need.
 
@@ -71,11 +98,16 @@ def _normalize(m: dict) -> dict:
     elif method == "groq":
         hindsight_provider, hindsight_model, base_url = "groq", m["groq_model"], None
     elif method == "url":
-        # OpenAI-compatible endpoint. Only non-OpenAI hosts need an explicit base_url.
-        hindsight_provider = "openai"
         hindsight_model = m["api_model"]
-        url = (m.get("url") or "").rstrip("/")
-        base_url = None if m["provider_id"] == "openai" else f"{url}/v1"
+        if m["provider_id"] == "anthropic":
+            # The daemon has a native Anthropic provider; the OpenAI-compat
+            # endpoint rejects the daemon's response_format=json_object.
+            hindsight_provider, base_url = "anthropic", None
+        else:
+            # OpenAI-compatible endpoint. Only non-OpenAI hosts need an explicit base_url.
+            hindsight_provider = "openai"
+            url = (m.get("url") or "").rstrip("/")
+            base_url = None if m["provider_id"] == "openai" else f"{url}/v1"
     else:
         raise ValueError(f"Unknown method {method!r} for model {m.get('model_id')}")
 
@@ -93,6 +125,8 @@ def _normalize(m: dict) -> dict:
         # "none" disables thinking on reasoning models; unset sends no
         # reasoning parameter at all (each model runs at its own default).
         "reasoning_effort": m.get("reasoning_effort"),
+        # Extra request-body params (e.g. OpenRouter provider pinning).
+        "extra_body": derive_extra_body(m),
     }
 
 
@@ -142,6 +176,7 @@ def add_model(
     url: str | None = None,
     notes: str | None = None,
     benchmarks: list[str] | None = None,
+    openrouter_providers: list[str] | None = None,
 ) -> dict:
     """Append a new model entry to benchmark_models.json and return it.
 
@@ -179,6 +214,10 @@ def add_model(
         entry["size_gb"] = size_gb
     if notes:
         entry["notes"] = notes
+    if openrouter_providers:
+        if provider != "openrouter":
+            raise ValueError("openrouter_providers only applies to provider 'openrouter'")
+        entry["openrouter_providers"] = openrouter_providers
     entry["benchmarks"] = benchmarks
 
     text = CONFIG_PATH.read_text()

@@ -47,8 +47,19 @@ class ReflectBenchmark:
     DATASET_PATH = DATASETS_DIR / "locomo_quality.json"
     TARGET_CONVERSATION = "conv-43"
 
-    def __init__(self, gemini_api_key: str = None, openai_api_key: str = None):
-        if gemini_api_key:
+    def __init__(self, gemini_api_key: str = None, openai_api_key: str = None,
+                 openrouter_api_key: str = None):
+        if openrouter_api_key:
+            # Same judge model via OpenRouter — paid-tier rate limits for the
+            # 242 judge calls without a billed Gemini key.
+            print(f"Using google/{JUDGE_MODEL} for judge (OpenRouter)")
+            self.llm_client = OpenAI(
+                api_key=openrouter_api_key,
+                base_url="https://openrouter.ai/api/v1",
+                timeout=90.0,
+            )
+            self.judge_model = f"google/{JUDGE_MODEL}"
+        elif gemini_api_key:
             print(f"Using {JUDGE_MODEL} for judge")
             self.llm_client = OpenAI(
                 api_key=gemini_api_key,

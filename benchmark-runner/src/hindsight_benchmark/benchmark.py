@@ -436,6 +436,9 @@ async def _call_inference(client: AsyncOpenAI, text: str, use_short_prompt: bool
     if "gpt-5" in model_name:
         kwargs["max_completion_tokens"] = 16384
         # GPT-5 only supports temperature=1 (default), so omit it
+    elif any(m in model_name for m in ("claude-opus-5", "claude-sonnet-5", "claude-fable-5")):
+        # Claude 5-generation models reject the temperature parameter (400).
+        kwargs["max_tokens"] = 16384
     else:
         kwargs["max_tokens"] = 16384
         kwargs["temperature"] = 0.1

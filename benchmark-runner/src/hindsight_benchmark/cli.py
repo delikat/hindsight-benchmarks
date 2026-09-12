@@ -161,10 +161,12 @@ def main():
                             continue
                     url = model_config["url"]
                     api_model = model_config["api_model"]
+                    from .models_config import derive_extra_body
                     run = run_url(url, model_id=model_id, model_name=model_name,
                                 provider_id=provider_id, concurrency=args.concurrency,
                                 dataset=args.dataset, api_key=api_key, model=api_model,
-                                reasoning_effort=model_config.get("reasoning_effort", ""))
+                                reasoning_effort=model_config.get("reasoning_effort", ""),
+                                extra_body=derive_extra_body(model_config))
                     save_run(provider_id, model_id, run)
                     _print_summary(run)
 

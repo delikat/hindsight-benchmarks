@@ -20,6 +20,9 @@ RESULTS_DIR = BENCHMARK_RUNNER_DIR.parent / "results" / "leaderboard" / "llm"
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+# Judge via OpenRouter (same google/gemini model) when set — paid-tier rate
+# limits without needing Vertex access or a billed Gemini key.
+OPENROUTER_JUDGE_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY", "")
 # Judge route: Gemini 3.7 Flash on Vertex AI, billed to GCP credits. Set to
 # empty to fall back to GEMINI_API_KEY.
@@ -41,6 +44,9 @@ MODEL_BASE_URLS = {m["model_id"]: m["base_url"] for m in _QUALITY_MODELS if m["b
 
 # Models with a pinned reasoning effort ("none" disables thinking)
 MODEL_REASONING = {m["model_id"]: m["reasoning_effort"] for m in _QUALITY_MODELS if m.get("reasoning_effort")}
+
+# Extra request-body params (e.g. OpenRouter provider pinning)
+MODEL_EXTRA_BODY = {m["model_id"]: m["extra_body"] for m in _QUALITY_MODELS if m.get("extra_body")}
 
 BASE_CONFIG = {
     "HINDSIGHT_API_EMBEDDINGS_PROVIDER": "local",
@@ -84,6 +90,8 @@ def make_config(hindsight_provider: str, hindsight_model: str, api_key: str, run
         config["HINDSIGHT_API_LLM_BASE_URL"] = MODEL_BASE_URLS[model_id]
     if model_id in MODEL_REASONING:
         config["HINDSIGHT_API_LLM_REASONING_EFFORT"] = MODEL_REASONING[model_id]
+    if model_id in MODEL_EXTRA_BODY:
+        config["HINDSIGHT_API_LLM_EXTRA_BODY"] = json.dumps(MODEL_EXTRA_BODY[model_id])
     return config
 
 
@@ -136,6 +144,7 @@ def main():
     benchmark = QualityBenchmark(
         vertex_project=VERTEX_JUDGE_PROJECT or None,
         gemini_api_key=GEMINI_API_KEY,
+        openrouter_api_key=OPENROUTER_JUDGE_API_KEY,
     )
     mgr = DaemonEmbedManager()
 
